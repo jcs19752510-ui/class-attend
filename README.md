@@ -1,40 +1,41 @@
-# HARNESS_BASIC
+# class-attend — 학원관리 프로그램
 
-AI(Claude Code 등)에게 개발을 위임할 때, "무엇을 사람이 결정하고 무엇을
-AI가 실행할지"의 경계선을 문서와 절차로 미리 고정해 둔 **범용 거버넌스
-프레임워크**입니다. 특정 업무 프로그램(예: 재고관리, 예약시스템, 인사관리
-등)의 구현체가 아니라, 그런 프로그램들을 만들 때 공통으로 가져다 쓰는
-**기본 시스템(하네스)** 그 자체입니다.   
+`HARNESS_BASIC`(범용 거버넌스 하네스)을 템플릿으로 생성된 실제 구현
+프로젝트입니다. `harness/` 아래 20종 문서는 하네스 원본 그대로의 절차/규칙
+이고, `docs/`, `src/`, `tests/`는 이 프로젝트의 실제 TRD·코드·테스트로
+채워 나갑니다.
+
+## 현재 상태
+
+- 요구사항 미확정 — Phase A(프로젝트 착수) 진행 전 단계
+- 기준 브랜치 미확정 (원격에 `main`/`PROD`/`PROD_SCH` 존재, 하나로 정리 예정)
+- `docs/`, `src/`, `tests/`는 아직 빈 골격(`.gitkeep`)
 
 ## 무엇부터 읽어야 하나
 
 | 목적 | 문서 |
 |---|---|
-| 5분 안에 전체 그림 파악 | [`harness/harness_00_definition.md`](harness/harness_00_definition.md) |
-| 전체 구조를 다이어그램으로 | [`harness/harness_structure_diagram.md`](harness/harness_structure_diagram.md) |
-| Claude Code 세션 지침(원칙/규칙) | [`CLAUDE.md`](CLAUDE.md) |
+| 이 프로젝트의 지침/원칙 (Claude Code 세션 시작 시 항상 먼저 읽음) | [`CLAUDE.md`](CLAUDE.md) |
+| 하네스 5분 요약(전체 지도) | [`harness/harness_00_definition.md`](harness/harness_00_definition.md) |
 | SOP 및 타협 불가 8원칙 | [`harness/harness_00_overview.md`](harness/harness_00_overview.md) |
 | 문서 20종 전체 목록 | `harness/harness_00_definition.md` §3 |
+| 진행 현황(인수인계) | `docs/handoff/` *(작성 전)* |
 
-## 이 저장소를 실제 프로젝트에 연결하는 방법
+## 작업 절차 요약
 
-**이 저장소(`HARNESS_BASIC`) 자체에는 실제 프로젝트의 코드/TRD/문서를
-절대 커밋하지 않습니다.** `docs/`, `src/`, `tests/`는 항상 빈 골격
-(`.gitkeep`)만 유지합니다.
+1. **Phase A (착수, 1회)**: 요구사항 정의 → 데이터모델 ADR → 전역 기술 컨벤션 →
+   마스터 TRD → 릴리스 우선순위 (`harness_00_definition.md` §4)
+2. **Phase B (단위별 반복)**: 단위 TRD/AC 확정 → 작업지시서 작성 → 프롬프트
+   생성·AI 실행 → AC 통과 확인 + 사람 리뷰 → `feature/{단위코드}` 브랜치
+   머지 → 인수인계 문서 갱신
+3. **Phase C (마감)**: 통합 E2E 테스트 → 배포 → 모니터링 → 회고
 
-새 프로젝트를 시작할 때는 아래 순서를 따르세요.
+## Git 워크플로우
 
-1. 이 저장소의 GitHub Settings → General → **Template repository** 체크
-   (사람이 직접 — 최초 1회만 하면 됨)
-2. 새 프로젝트마다 이 저장소 페이지의 **"Use this template"** 버튼으로
-   새 저장소 생성 (harness 전체가 그대로 복사되어 시작)
-3. 새 저장소의 `CLAUDE.md` "프로젝트 개요"를 실제 프로젝트 설명으로
-   교체 (하네스 원칙 8개와 Git 작업 관련 규칙은 그대로 유지)
-4. `harness/harness_00_definition.md` §4의 Phase A부터 순서대로 진행
-
-이 방식(A안)을 선택한 이유와 대안(수동 복사/submodule)은
-[`CLAUDE.md`](CLAUDE.md) "저장소 연결 방식" 섹션에 동일하게 설명돼
-있습니다.
+- 기준 브랜치는 하나로 확정해 `CLAUDE.md`에 명시 (진행 예정)
+- 기준 브랜치에는 직접 커밋하지 않음
+- 작업 단위마다 `feature/{단위코드}` 브랜치 생성, 커밋 메시지 `[{단위코드}] {요약}`
+- AC 통과 + diff 리뷰 완료 후에만 머지
 
 ## 라이선스
 
