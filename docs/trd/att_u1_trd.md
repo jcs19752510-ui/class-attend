@@ -101,6 +101,14 @@ User
 | 403 FORBIDDEN_BRANCH | 타 지점 접근 | 자기 지점이 아닌 branch_id 대상 조작 시도 |
 | 401 INVALID_CREDENTIALS | 인증 실패 | 이메일/비밀번호 불일치 |
 | 423 ACCOUNT_DEACTIVATED | 비활성 계정 | status=inactive 계정으로 로그인 시도 |
+| 403 PASSWORD_CHANGE_REQUIRED | 비밀번호 미변경 | mustChangePassword=true 상태에서 change-password 외 API 호출 (AC-3 구현 중 추가 — 원본 TRD에 없던 코드) |
+| 422 VALIDATION_ERROR | 입력값 검증 실패 | 필수 필드 누락(예: branchId), 비밀번호 정책 위반 등 (구현 중 추가) |
+
+> 구현 중 판단 근거: 계정 비활성화(`PATCH /users/{id}/deactivate`) API를
+> 누가 누구에게 실행할 수 있는지는 원 TRD에 명시되지 않아, 역할 위계상
+> 합리적으로 "franchise_admin은 전체, director는 자기 지점 teacher만"으로
+> 구현했다(코드: `src/app/api/users/[id]/deactivate/route.ts` 주석 참고).
+> 이 가정은 재검토 대상 — `AUTO_CONFIRM_CONTENTS.MD`에도 기록함.
 
 ## §5. 인수 조건 (Acceptance Criteria)
 - [ ] AC-1: franchise_admin role이 아닌 사용자가 지점 생성 API를 호출하면

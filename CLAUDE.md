@@ -19,8 +19,13 @@ git으로 확인해야 할 정보가 필요하면 사용자에게 직접 실행�
   구현 프로젝트**입니다. `harness/` 아래 20종 문서는 그대로 가져온 절차/규칙
   이고, `docs/`, `src/`, `tests/`는 이 프로젝트의 실제 TRD·코드·테스트로
   채워 나갑니다.
-- 신규 개발 — Phase A-1 요구사항 정의 진행 중 (마스터 TRD 초안 확정,
-  단위별 상세 TRD·AC는 아직 작성 전)
+- 2026-09-06 기준: U1~U7 전체 단위 TRD 확정 + 구현 완료(Next.js 16+
+  Prisma+PostgreSQL+Tailwind, 97개 자동화 테스트 통과, `next build` 성공,
+  `npm audit` 취약점 0건). 역할별(본사/원장/강사/학부모) 관리자 UI
+  화면까지 구현 완료. 실제 DB 마이그레이션 실행·클라우드 배포는 아직
+  하지 않음(`docker-compose.yml`로 로컬 Postgres 준비 필요,
+  `harness_09_deployment_runbook.md`에 배포 절차 기록).
+- 자동 확정된 세부 구현 판단 전체 목록: `AUTO_CONFIRM_CONTENTS.MD`
 - 기준 브랜치: `PROD_SCH` (사용자 확정, 2026-09-05)
 
 ## 요구사항 / 완성 정의 (Definition of Done)
@@ -29,11 +34,11 @@ git으로 확인해야 할 정보가 필요하면 사용자에게 직접 실행�
 - 마스터 TRD(단위 분할 포함): `docs/trd/att_master_trd.md`
 - 데이터모델·테넌시 관련 승인된 결정: `harness/harness_08_adr.md`
   ADR-001(지점 데이터 격리), ADR-002(학생-반-강사 관계)
-- 단위(Unit) 목록: U1 지점·계정 관리 / U2 학생·반 관리 / U3 출결 체크 /
-  U4 출결 조회·통계 / U5 학부모-자녀 연결 / U6 개인정보 생명주기 /
-  U7 감사로그 — 각 단위의 상세 TRD·AC는 아직 미작성(다음 단계).
-- 미결 항목(확정 필요): 개인정보 보유기간 정확 일수, 지점 신설/폐쇄 절차,
-  출결 마감 시간, 통계 지표 — 상세는 `att_master_trd.md` §5 참고.
+- 단위(Unit) 목록(전부 확정+구현 완료): U1 지점·계정 관리 / U2 학생·반
+  관리 / U3 출결 체크 / U4 출결 조회·통계 / U5 학부모-자녀 연결 /
+  U6 개인정보 생명주기 / U7 감사로그.
+- 요구사항 단계 미결 항목은 전부 해소됨(`att_master_trd.md` §5). 남은
+  것은 실 배포 인프라 구성과 미성년자 개인정보 법적 검토뿐.
 
 ## 하네스 원칙 (harness/harness_00_overview.md 기반, 반드시 준수)
 
@@ -94,3 +99,13 @@ git으로 확인해야 할 정보가 필요하면 사용자에게 직접 실행�
 ## 알려진 실패 패턴
 프로젝트 진행 중 새로 발견한 실패 패턴은 `harness/harness_06_meta_improvement.md`
 §3 "실패 패턴 라이브러리"에 일반화된 형태로 누적하세요.
+
+<!-- BEGIN:nextjs-agent-rules -->
+
+# This is NOT the Next.js you know
+
+This version has breaking changes — APIs, conventions, and file structure may all differ from your training data. Read the relevant guide in `node_modules/next/dist/docs/` (resolved from this file's directory; in monorepos the `next` package may not be visible from the repo root) before writing any code. Heed deprecation notices.
+
+This block is written and re-added by `next dev` — verify at `node_modules/next/dist/server/lib/generate-agent-files.js`. Removing it from a diff only re-creates the uncommitted change; committing it with your work keeps the tree clean.
+
+<!-- END:nextjs-agent-rules -->

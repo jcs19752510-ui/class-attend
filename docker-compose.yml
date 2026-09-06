@@ -1,0 +1,18 @@
+# 로컬 개발용 PostgreSQL. 이 저장소의 자동화 테스트는 Prisma Client를
+# mock하여 실행되므로 이 컨테이너가 없어도 `npm test`는 동작하지만,
+# 실제로 `npm run dev`나 `prisma migrate dev`를 돌리려면 필요합니다.
+services:
+  db:
+    image: postgres:16-alpine
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: att
+      POSTGRES_PASSWORD: att
+      POSTGRES_DB: att_dev
+    ports:
+      - "5432:5432"
+    volumes:
+      - att_pgdata:/var/lib/postgresql/data
+
+volumes:
+  att_pgdata:
