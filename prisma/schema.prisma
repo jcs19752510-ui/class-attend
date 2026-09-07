@@ -1,0 +1,201 @@
+// U1(지점·계정 관리) + U7(감사로그) 데이터 구조.
+// 출처: docs/trd/att_u1_trd.md §1, docs/trd/att_u7_trd.md §1
+// branch_id의 role별 필수/nullable 규칙(ADR-001)은 DB 제약이 아니라
+// 애플리케이션 계층(src/lib/auth.ts)에서 검증한다 (att_u1_trd.md AC-5).
+
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum UserRole {
+  franchise_admin
+  director
+  teacher
+  parent
+}
+
+enum AccountStatus {
+  active
+  inactive
+}
+
+enum BranchStatus {
+  active
+  closed
+}
+
+model Branch {
+  id        String       @id @default(cuid())
+  name      String
+  address   String?
+  phone     String?
+  status    BranchStatus @default(active)
+  createdAt DateTime     @default(now()) @map("created_at")
+
+  users User[]
+
+  @@map("branches")
+}
+
+model User {
+  id                 String        @id @default(cuid())
+  email              String        @unique
+  passwordHash       String        @map("password_hash")
+  name               String
+  phone              String?
+  role               UserRole
+  branchId           String?       @map("branch_id")
+  branch             Branch?       @relation(fields: [branchId], references: [id])
+  status             AccountStatus @default(active)
+  mustChangePassword Boolean       @default(true) @map("must_change_password")
+  createdAt          DateTime      @default(now()) @map("created_at")
+  privacyAgreedAt    DateTime?     @map("privacy_agreed_at") // parent 셀프가입 시 개인정보처리방침 동의 시각 (harness_10 §7)
+
+  @@map("users")
+}
+
+enum StudentStatus {
+  enrolled
+  withdrawn
+}
+
+enum ClassStatus {
+  active
+  closed
+}
+
+// docs/trd/att_u2_trd.md §1
+model Student {
+  id             String        @id @default(cuid())
+  branchId       String        @map("branch_id")
+  name           String
+  birthDate      DateTime      @map("birth_date")
+  studentPhone   String?       @map("student_phone")
+  guardianPhone  String        @map("guardian_phone")
+  status         StudentStatus @default(enrolled)
+  enrolledAt     DateTime      @default(now()) @map("enrolled_at")
+  withdrawnAt    DateTime?     @map("withdrawn_at")
+  purgedAt       DateTime?     @map("purged_at") // ADR-005: 개인정보 파기(마스킹) 처리 시각
+  guardianConsentAt DateTime   @map("guardian_consent_at") // 보호자 개인정보 수집·이용 동의 확인 시각 (harness_10 §7)
+
+  studentClasses StudentClass[]
+
+  @@map("students")
+}
+
+model Class {
+  id        String      @id @default(cuid())
+  branchId  String      @map("branch_id")
+  name      String
+  subject   String?
+  status    ClassStatus @default(active)
+  createdAt DateTime    @default(now()) @map("created_at")
+
+  studentClasses StudentClass[]
+  classTeachers  ClassTeacher[]
+
+  @@map("classes")
+}
+
+// 학생-반 다대다 매핑 (ADR-002). 배정 해제는 물리삭제 대신 unassignedAt만
+// 채운다 — 과거 배정 이력을 U3 출결 조회 시 추적할 수 있어야 하기 때문.
+model StudentClass {
+  id           String    @id @default(cuid())
+  studentId    String    @map("student_id")
+  classId      String    @map("class_id")
+  assignedAt   DateTime  @default(now()) @map("assigned_at")
+  unassignedAt DateTime? @map("unassigned_at")
+
+  student Student @relation(fields: [studentId], references: [id])
+  class   Class   @relation(fields: [classId], references: [id])
+
+  @@map("student_classes")
+}
+
+// 반-강사 다대다 매핑 (ADR-002). teacherUserId는 User.role=teacher를 가리킨다
+// (DB 레벨 role 제약은 없음 — 애플리케이션 계층에서 검증).
+model ClassTeacher {
+  id            String    @id @default(cuid())
+  classId       String    @map("class_id")
+  teacherUserId String    @map("teacher_user_id")
+  assignedAt    DateTime  @default(now()) @map("assigned_at")
+  unassignedAt  DateTime? @map("unassigned_at")
+
+  class Class @relation(fields: [classId], references: [id])
+
+  @@map("class_teachers")
+}
+
+enum ParentLinkStatus {
+  pending
+  approved
+  rejected
+  revoked
+}
+
+// docs/trd/att_u5_trd.md §1
+model ParentStudentLink {
+  id                        String           @id @default(cuid())
+  parentUserId              String           @map("parent_user_id")
+  branchId                  String           @map("branch_id")
+  requestedStudentName      String           @map("requested_student_name")
+  requestedStudentBirthDate DateTime         @map("requested_student_birth_date")
+  studentId                 String?          @map("student_id")
+  status                    ParentLinkStatus @default(pending)
+  requestedAt               DateTime         @default(now()) @map("requested_at")
+  reviewedBy                String?          @map("reviewed_by")
+  reviewedAt                DateTime?        @map("reviewed_at")
+  rejectReason              String?          @map("reject_reason")
+
+  @@map("parent_student_links")
+}
+
+enum AttendanceStatus {
+  present
+  absent
+  late
+  early_leave
+  excused_absence
+}
+
+// docs/trd/att_u3_trd.md §1. (student_id, class_id, date) 유니크 —
+// 동일 조합 재저장 시 새 레코드가 아니라 기존 레코드를 갱신한다(AC-4).
+model Attendance {
+  id         String           @id @default(cuid())
+  branchId   String           @map("branch_id")
+  studentId  String           @map("student_id")
+  classId    String           @map("class_id")
+  date       DateTime
+  status     AttendanceStatus
+  recordedBy String           @map("recorded_by")
+  recordedAt DateTime         @default(now()) @map("recorded_at")
+  updatedBy  String?          @map("updated_by")
+  updatedAt  DateTime?        @map("updated_at")
+
+  @@unique([studentId, classId, date])
+  @@map("attendances")
+}
+
+// action_type 예시: user.create / user.deactivate / student.create /
+// student.update / student.withdraw / class_student.assign /
+// class_teacher.assign / attendance.create / attendance.update /
+// parent_link.request / parent_link.approve / parent_link.reject /
+// personal_data.view (att_u7_trd.md §1)
+model AuditLog {
+  id          String   @id @default(cuid())
+  branchId    String?  @map("branch_id")
+  actorUserId String   @map("actor_user_id")
+  actionType  String   @map("action_type")
+  targetType  String   @map("target_type")
+  targetId    String   @map("target_id")
+  beforeValue Json?    @map("before_value")
+  afterValue  Json?    @map("after_value")
+  occurredAt  DateTime @default(now()) @map("occurred_at")
+
+  @@map("audit_logs")
+}
